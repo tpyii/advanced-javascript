@@ -1,3 +1,5 @@
+const API = 'https://raw.githubusercontent.com/GeekBrainsTutorial/online-store-api/master/responses';
+
 /** Класс списка товаров */
 class GoodsList {
   /**
@@ -7,17 +9,34 @@ class GoodsList {
   constructor(container = document.querySelector('.products')) {
     this.container = container;
     this.goods = [];
-    this._fetchGoods();
+    this._fetchGoods()
+      .then(data => {
+        if (data.length) {
+          this.goods = data.map(item => new GoodItem(item));
+        }
+        this.render();
+        this._addEventListener();
+      })
   }
 
-  /** Получить список товаров */
+  /** Повесить обработчики */
+  _addEventListener() {
+    document.querySelectorAll('.btn-buy').forEach(item => {
+      item.addEventListener('click', event => {
+        const good = this.goods.find(item => item.id_product === +event.target.parentElement.dataset.id);
+        basket.addGood(good);
+      });
+    });
+  }
+
+  /** 
+   * Получить список товаров 
+   * @returns {Promise}
+   */
   _fetchGoods() {
-    this.goods = [
-      {id: 1, title: 'Notebook', price: 2000},
-      {id: 2, title: 'Mouse', price: 20},
-      {id: 3, title: 'Keyboard', price: 200},
-      {id: 4, title: 'Gamepad', price: 50},
-    ];
+    return fetch(`${API}/catalogData.json`)
+      .then(result => result.json())
+      .catch(error => console.log(error))
   }
 
   /**
@@ -30,7 +49,7 @@ class GoodsList {
 
   /** Отрисовать список товаров */
   render() {
-    this.goods.forEach(item => this.container.insertAdjacentHTML('beforeend', new GoodItem(item).render()));
+    this.goods.forEach(item => this.container.insertAdjacentHTML('beforeend', item.render()));
   }
 }
 
@@ -39,15 +58,17 @@ class GoodItem {
   /**
    * Конструктор товара
    * @param {Object} product - Обьект товара
-   * @param {number} product.id - Идентификатор товара
-   * @param {string} product.title - Заголовок товара
+   * @param {number} product.id_product - Идентификатор товара
+   * @param {string} product.product_name - Заголовок товара
    * @param {number} product.price - Цена товара
+   * @param {number} product.quantity - Количество товара
    * @param {string} img - Путь к изображению товара
    */
   constructor(product, img = 'https://via.placeholder.com/200') {
-    this.id = product.id;
-    this.title = product.title;
+    this.id_product = product.id_product;
+    this.product_name = product.product_name;
     this.price = product.price;
+    this.quantity = 1;
     this.img = img;
   }
 
@@ -56,17 +77,175 @@ class GoodItem {
    * @returns {string} Шаблон товара
    */
   render() {
-    return `<div class="product-item" data-id="${this.id}">
+    return `<div class="product-item" data-id="${this.id_product}">
         <img src="${this.img}" alt="">
-        <h3>${this.title}</h3>
+        <h3>${this.product_name}</h3>
         <p>${this.price}</p>
         <button class="btn-buy">Купить</button>
       </div>`;
   }
 }
 
-class Cart {}
-class CartItem {}
+/** Класс корзины */
+class Cart {
+  /** Конструктор корзины */
+  constructor() {
+    this.container = document.querySelector('#basket');
+    this.containerItems = this.container.querySelector('.basket-items');
+    this.containerAmount = this.container.querySelector('.basket-amount');
+    this.buttonCloseCart = this.container.querySelector('.btn-close');
+    this.buttonOpenCart = document.querySelector('.btn-cart');
+    this.amount = 0;
+    this.countGoods = 0;
+    this.contents = [];
+    this._fetchGoods()
+      .then(data => {
+        if (data.contents.length) {
+          this.contents = data.contents.map(item => new CartItem(item));
+        }
+        this._calcAll();
+      });
+  }
+
+  /** Повесить обработчики */
+  _addEventListener() {
+    this.buttonOpenCart.addEventListener('click', () => this.show());
+    this.buttonCloseCart.addEventListener('click', () => this.hide());
+    document.querySelectorAll('.btn-remove').forEach(item => {
+      item.addEventListener('click', event => this.removeGood(+event.target.parentElement.parentElement.dataset.id));
+    });
+  }
+
+  /**
+   * Получить список товаров
+   * @returns {Promise}
+   */
+  _fetchGoods() {
+    return fetch(`${API}/getBasket.json`)
+      .then(result => result.json())
+      .catch(error => console.log(error));
+  }
+
+  /** Пересчитать корзину */
+  _calcAll() {
+    this._calcAmount();
+    this._calcCountGoods();
+    this.render();
+  }
+
+  /** Пересчитать сумму корзины */
+  _calcAmount() {
+    this.amount = this.contents.reduce((total, item) => total + item.price * item.quantity, 0);
+  }
+
+  /** Пересчитать количество товаров */
+  _calcCountGoods() {
+    this.countGoods = this.contents.reduce((total, item) => total + item.quantity, 0);
+  }
+
+  /** Отрисовать товары, если они есть */
+  _renderItems() {
+    if (this.contents.length) {
+      this.containerItems.innerHTML = '';
+      this.contents.forEach(item => this.containerItems.insertAdjacentHTML('beforeend', item.render()));
+    } else {
+      this.containerItems.innerText = 'Корзина пуста';
+    }
+  }
+
+  /** Отрисовать сумму корзины */
+  _renderAmount() {
+    this.containerAmount.innerText = this.amount > 0 ? `Товаров на сумму: ${this.amount}` : '';
+  }
+
+  /**
+   * Получить товар корзины
+   * @param {number} id - Идентификатор товара
+   * @returns {Object|undefined}
+   */
+  getGood(id) {
+    return this.contents.find(item => item.id_product === id);
+  }
+
+  /**
+   * Добавить товар в корзину
+   * @param {Object} product - Объект товара
+   */
+  addGood(product) {
+    const good = this.getGood(product.id_product);
+    if (! good) {
+      this.contents.push(new CartItem(product));
+    } else {
+      good.quantity += product.quantity;
+    }
+    this._calcAll();
+    this.show();
+  }
+  
+  /**
+   * Удалить товар из корзины
+   * @param {number} id - Идентификатор товара
+   */
+  removeGood(id) {
+    this.contents = this.contents.filter(item => item.id_product !== id);
+    this._calcAll();
+  }
+
+  /** Показать корзину */
+  show() {
+    this.container.classList.add('show');
+  }
+
+  /** Скрыть корзину */
+  hide() {
+    this.container.classList.remove('show');
+  }
+  
+  /** Отрисовать корзину */
+  render() {
+    this._renderItems();
+    this._renderAmount();
+    this._addEventListener();
+  }
+}
+
+/** Класс товара корзины */
+class CartItem {
+  /**
+   * Конструктор товара корзины
+   * @param {Object} product - Объект товара
+   * @param {number} product.id_product - Идентификатор товара
+   * @param {string} product.product_name - Заголовок товара
+   * @param {number} product.price - Цена товара
+   * @param {number} product.quantity - Количество товара
+   * @param {string} img - Путь к изображению товара
+   */
+  constructor(product, img = 'https://via.placeholder.com/100') {
+    this.id_product = product.id_product;
+    this.product_name = product.product_name;
+    this.price = product.price;
+    this.quantity = product.quantity;
+    this.img = img;
+  }
+
+  /** 
+   * Отрисовать товар корзины
+   * @returns {string} Шаблон товара корзины
+   */
+  render() {
+    return `<div class="basket-item" data-id="${this.id_product}">
+      <div class="basket-image">
+        <img src="${this.img}" alt="">
+      </div>
+      <div class="basket-body">
+        <h3 class="basket-item-title">${this.product_name}</h3>
+        <p>${this.price}</p>
+        <button class="btn-remove">Удалить</button>
+      </div>
+      <div class="basket-quanity">${this.quantity}</div>
+    </div>`;
+  }
+}
 
 let list = new GoodsList;
-list.render();
+let basket = new Cart;
