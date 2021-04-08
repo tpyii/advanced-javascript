@@ -1,5 +1,100 @@
 const API = 'https://raw.githubusercontent.com/GeekBrainsTutorial/online-store-api/master/responses';
 
+const app = new Vue({
+  el: '#app',
+  data: {
+    goodsThumbnail: 'https://via.placeholder.com/200',
+    goods: [],
+    filteredGoods: [],
+    searchValue: '',
+    basketShow: false,
+    basketGoodThumbnail: 'https://via.placeholder.com/100',
+    basket: {}
+  },
+  methods: {
+    /**
+     * Получить json данные
+     * @param {string} url - адрес
+     * @returns {Promise}
+     */
+    fetch(url) {
+      return fetch(url)
+        .then(result => result.json())
+        .catch(error => console.log(error))
+    },
+
+    /** Фильтр товаров по имени */
+    filterGoods() {
+      const regexp = new RegExp(this.searchValue, 'i');
+      this.filteredGoods = this.goods.filter(good => regexp.test(good.product_name));
+    },
+
+    /** Добавить товар в корзину */
+    addBasketGood(good) {
+      const basketGood = this.getBasketGood(good.id_product);
+      if (! basketGood) {
+        this.basket.contents.push({
+          ...good,
+          quantity: 1
+        });
+      } else {
+        this.basket.contents.map(item => {
+          if (item.id_product === basketGood.id_product) {
+            item.quantity += 1;
+            return item;
+          }
+          return item;
+        });
+      }
+      this.calcBasket();
+      this.basketShow = true;
+    },
+
+    /** Удалить товар из корзины */
+    removeBasketGood(good) {
+      this.basket.contents = this.basket.contents.filter(item => item.id_product !== good.id_product);
+      this.calcBasket();
+    },
+
+    /** Пересчитать количество товаров и стоимость в корзине */
+    calcBasket() {
+      this.calcAmount();
+      this.basketCountGoods();
+    },
+
+    /** Пересчитать стоимость товаров в корзине */
+    calcAmount() {
+      this.basket.amount = this.basket.contents.reduce((total, item) => total + item.price * item.quantity, 0);
+    },
+
+    /** Пересчитать количество товаров в корзине */
+    basketCountGoods() {
+      this.basket.countGoods = this.basket.contents.reduce((total, item) => total + item.quantity , 0);
+    },
+
+    /** 
+     * Получить товар в корзине по id 
+     * @param {number} id - идентификатор товара
+     * @returns {object}
+     */
+    getBasketGood(id) {
+      return this.basket.contents.find(item => item.id_product === id);
+    }
+  },
+  mounted() {
+    /** Плучить список товаров */
+    this.fetch(`${API}/catalogData.json`)
+      .then(data => {
+        this.goods = data;
+        this.filteredGoods = data;
+      });
+
+    /** Получить список товаров в корзине */
+    this.fetch(`${API}/getBasket.json`)
+      .then(data => this.basket = data);
+  }
+});
+
 /** Класс списка товаров */
 class GoodsList {
   /**
@@ -247,5 +342,5 @@ class CartItem {
   }
 }
 
-let list = new GoodsList;
-let basket = new Cart;
+// let list = new GoodsList;
+// let basket = new Cart;
