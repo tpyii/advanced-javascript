@@ -16,6 +16,7 @@
     </header>
     <main>
       <div class="products">
+        <div v-if="!goods.length">Нет данных</div>
         <div class="product-item" v-for="good in filteredGoods" :key="good.id_product">
           <img :src="goodsThumbnail" alt="">
           <h3>{{ good.product_name }}</h3>
