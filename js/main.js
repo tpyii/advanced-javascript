@@ -9,7 +9,8 @@ const app = new Vue({
     searchValue: '',
     basketShow: false,
     basketGoodThumbnail: 'https://via.placeholder.com/100',
-    basket: {}
+    basket: {},
+    error: false
   },
   methods: {
     /**
@@ -20,7 +21,7 @@ const app = new Vue({
     fetch(url) {
       return fetch(url)
         .then(result => result.json())
-        .catch(error => console.log(error))
+        .catch(error => this.error = error)
     },
 
     /** Фильтр товаров по имени */
