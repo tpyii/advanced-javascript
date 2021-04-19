@@ -11,23 +11,21 @@
 <body>
   <div id="app">
     <header>
-      <search></search>
-      <button class="btn-cart" type="button" @click="basketShow = !basketShow">Корзина</button>
+      <search ref="search"></search>
+      <button class="btn-cart" type="button" @click="$refs.basket.basketShow = true">Корзина</button>
     </header>
     <main>
-      <products></products>
+      <products ref="products"></products>
     </main>
-    <basket></basket>
-    <div class="error" v-bind:class="{ show: error }">
-      {{ error }} 
-      <button class="btn-close" @click="error = false">X</button>
-    </div>
+    <basket ref="basket"></basket>
+    <error ref="error"></error>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
-  <script src="./js/components/search.js"></script>
-  <script src="./js/components/products.js"></script>
-  <script src="./js/components/basket.js"></script>
+  <script src="js/components/search.js"></script>
+  <script src="js/components/products.js"></script>
+  <script src="js/components/basket.js"></script>
+  <script src="js/components/error.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
