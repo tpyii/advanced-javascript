@@ -1,7 +1,16 @@
-const API = 'https://raw.githubusercontent.com/GeekBrainsTutorial/online-store-api/master/responses';
+import basket from './components/basket';
+import error from './components/error';
+import products from './components/products';
+import search from './components/search';
 
-const app = new Vue({
+const app = {
   el: '#app',
+  components: {
+    basket,
+    error,
+    products,
+    search
+  },
   methods: {
     /**
      * Получить json данные
@@ -66,4 +75,6 @@ const app = new Vue({
         .catch(error => this.$refs.error.text = error)
     }
   }
-});
+}
+
+export default app;
