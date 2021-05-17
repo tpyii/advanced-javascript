@@ -11,44 +11,23 @@
 <body>
   <div id="app">
     <header>
-      <input type="text" name="search" class="header-search" placeholder="Поиск по товарам" v-model="searchValue" @input="filterGoods()">
+      <search></search>
       <button class="btn-cart" type="button" @click="basketShow = !basketShow">Корзина</button>
     </header>
     <main>
-      <div class="products">
-        <div v-if="!goods.length">Нет данных</div>
-        <div class="product-item" v-for="good in filteredGoods" :key="good.id_product">
-          <img :src="goodsThumbnail" alt="">
-          <h3>{{ good.product_name }}</h3>
-          <p>{{ good.price }}</p>
-          <button class="btn-buy" @click="addBasketGood(good)">Купить</button>
-        </div>
-      </div>
+      <products></products>
     </main>
-    <div id="basket" v-bind:class="{ show: basketShow }">
-      <div class="basket-header">
-        <h2>Корзина</h2>
-        <button class="btn-close" @click="basketShow = !basketShow">X</button>
-      </div>
-      <div class="basket-items">
-        <div v-if="!basket.countGoods">Корзина пуста</div>
-        <div class="basket-item" v-for="good in basket.contents" :key="good.id_product">
-          <div class="basket-image">
-            <img :src="basketGoodThumbnail" alt="">
-          </div>
-          <div class="basket-body">
-            <h3 class="basket-item-title">{{ good.product_name }}</h3>
-            <p>{{ good.price }}</p>
-            <button class="btn-remove" @click="removeBasketGood(good)">Удалить</button>
-          </div>
-          <div class="basket-quanity">{{ good.quantity }}</div>
-        </div>
-      </div>
-      <div class="basket-amount" v-if="basket.amount">Товаров на сумму: {{ basket.amount }}</div>
+    <basket></basket>
+    <div class="error" v-bind:class="{ show: error }">
+      {{ error }} 
+      <button class="btn-close" @click="error = false">X</button>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <script src="./js/components/search.js"></script>
+  <script src="./js/components/products.js"></script>
+  <script src="./js/components/basket.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
