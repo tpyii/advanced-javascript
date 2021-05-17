@@ -1,11 +1,26 @@
-Vue.component('products', {
+const productItem = {
+  props: ['item', 'img'],
+  template: `
+    <div class="product-item">
+      <img :src="img" alt="">
+      <h3>{{ item.product_name }}</h3>
+      <p>{{ item.price }}</p>
+      <button class="btn-buy" @click="$root.$refs.basket.addBasketGood(item)">Купить</button>
+    </div>
+  `
+}
+
+const products = {
   data() {
     return {
-      url: 'api/products',
+      url: '/api/products',
       goodsThumbnail: 'https://via.placeholder.com/200',
       goods: [],
       filteredGoods: [],
     }
+  },
+  components: {
+    'product-item': productItem
   },
   mounted() {
     /** Плучить список товаров */
@@ -36,16 +51,6 @@ Vue.component('products', {
       ></product-item>
     </div>
   `
-});
+}
 
-Vue.component('product-item', {
-  props: ['item', 'img'],
-  template: `
-    <div class="product-item">
-      <img :src="img" alt="">
-      <h3>{{ item.product_name }}</h3>
-      <p>{{ item.price }}</p>
-      <button class="btn-buy" @click="$root.$refs.basket.addBasketGood(item)">Купить</button>
-    </div>
-  `
-});
+export default products;

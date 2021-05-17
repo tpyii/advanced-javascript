@@ -1,4 +1,4 @@
-Vue.component('search', {
+const search = {
   data() {
     return {
       searchValue: ''
@@ -14,4 +14,6 @@ Vue.component('search', {
       @input="$root.$refs.products.filterGoods(searchValue)"
     >
   `
-});
+}
+
+export default search;

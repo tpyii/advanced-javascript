@@ -1,11 +1,63 @@
-Vue.component('basket', {
+const basketHeader = {
+  template: `
+    <div class="basket-header">
+      <h2>Корзина</h2>
+      <button class="btn-close" @click="$parent.basketShow = false">X</button>
+    </div>
+  `
+}
+
+const basketItem = {
+  props: ['item', 'img'],
+  template: `
+    <div class="basket-item" >
+      <div class="basket-image">
+        <img :src="img" alt="">
+      </div>
+      <div class="basket-body">
+        <h3 class="basket-item-title">{{ item.product_name }}</h3>
+        <p>{{ item.price }}</p>
+        <button class="btn-remove" @click="$root.$refs.basket.removeBasketGood(item)">Удалить</button>
+      </div>
+      <div class="basket-quanity">{{ item.quantity }}</div>
+    </div>
+  `
+}
+
+const basketItems = {
+  components: {
+    'basket-item': basketItem
+  },
+  template: `
+    <div class="basket-items">
+      <div v-if="!$parent.basket.countGoods">Корзина пуста</div>
+      <basket-item 
+        v-for="item in $parent.basket.contents" 
+        :item="item"
+        :img="$parent.basketGoodThumbnail"
+        :key="item.id_product"
+      ></basket-item>
+    </div>
+  `
+}
+
+const basketAmount = {
+  template: `<div class="basket-amount" v-if="$parent.basket.amount">Товаров на сумму: {{ $parent.basket.amount }}</div>`
+}
+
+const basket = {
   data() {
     return {
-      url: 'api/cart',
+      url: '/api/cart',
       basketShow: false,
       basketGoodThumbnail: 'https://via.placeholder.com/100',
       basket: {}
     }
+  },
+  components: {
+    'basket-header': basketHeader,
+    'basket-items': basketItems,
+    'basket-amount': basketAmount 
   },
   mounted() {
     /** Получить список товаров в корзине */
@@ -84,48 +136,6 @@ Vue.component('basket', {
       <basket-amount></basket-amount>
     </div>
   `
-});
+}
 
-Vue.component('basket-header', {
-  template: `
-    <div class="basket-header">
-      <h2>Корзина</h2>
-      <button class="btn-close" @click="$parent.basketShow = false">X</button>
-    </div>
-  `
-});
-
-Vue.component('basket-items', {
-  template: `
-    <div class="basket-items">
-      <div v-if="!$parent.basket.countGoods">Корзина пуста</div>
-      <basket-item 
-        v-for="item in $parent.basket.contents" 
-        :item="item"
-        :img="$parent.basketGoodThumbnail"
-        :key="item.id_product"
-      ></basket-item>
-    </div>
-  `
-});
-
-Vue.component('basket-item', {
-  props: ['item', 'img'],
-  template: `
-    <div class="basket-item" >
-      <div class="basket-image">
-        <img :src="img" alt="">
-      </div>
-      <div class="basket-body">
-        <h3 class="basket-item-title">{{ item.product_name }}</h3>
-        <p>{{ item.price }}</p>
-        <button class="btn-remove" @click="$root.$refs.basket.removeBasketGood(item)">Удалить</button>
-      </div>
-      <div class="basket-quanity">{{ item.quantity }}</div>
-    </div>
-  `
-});
-
-Vue.component('basket-amount', {
-  template: `<div class="basket-amount" v-if="$parent.basket.amount">Товаров на сумму: {{ $parent.basket.amount }}</div>`
-});
+export default basket;
